@@ -22,6 +22,7 @@ export class ViteBuilder extends BaseBuilder<InlineConfig> {
   private readonly _inlineConfig: InlineConfig
   private readonly _viteBuild: Builder
   private readonly _viteCreateServer: ServerFactory
+  private readonly _defaultPort: number = 9080
 
   static async create(config: Item<InlineConfig>): Promise<ViteBuilder> {
     try {
@@ -100,12 +101,18 @@ export class ViteBuilder extends BaseBuilder<InlineConfig> {
     if (this._config.isRenderer) {
       _logger.log('Start vite dev server')
 
-      const server = await this._viteCreateServer({
+      const serverConfig = this._inlineConfig.server
+      const config = {
         ...this._inlineConfig,
         server: {
-          port: 9080,
+          ...((serverConfig && {
+            ...serverConfig,
+            port: serverConfig?.port ?? this._defaultPort,
+          }) || { port: this._defaultPort }),
         },
-      })
+      }
+
+      const server = await this._viteCreateServer(config)
 
       await server.listen()
 
